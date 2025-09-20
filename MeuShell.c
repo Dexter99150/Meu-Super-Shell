@@ -1,9 +1,11 @@
+// Bibliotecas padrão para I/O, alocação de memória, strings e funções do sistema.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
 
+// Imprime o banner de boas-vindas do shell.
 void exibir_banner() {
     printf("\033[1;32m");
     printf("\n");
@@ -34,30 +36,30 @@ void exibir_banner() {
     printf("\033[0m");
 }
 
-// Função para executar um comando externo (com fork e execvp)
+// Cria um processo filho (fork) para rodar comandos externos (execvp).
 void executar_comando_externo(char **args) {
     pid_t idProcesso = fork();
 
     if (idProcesso < 0) {
-        perror("Aconteceu um erro ao criar o processo filho");
+        perror("Erro no fork");
         exit(1);
     } else if (idProcesso == 0) {
-        // Processo filho
+        // Processo filho: executa o comando.
         if (execvp(args[0], args) == -1) {
-            perror("Aconteceu um erro ao executar o processo :( ");
+            perror("Erro ao executar comando");
             exit(1);
         }
     } else {
-        // Processo pai
+        // Processo pai: aguarda o término do filho.
         wait(NULL);
     }
 }
 
-// Função para lidar com comandos embutidos
-// Retorna 1 se o comando foi embutido, 0 caso contrário
+// Trata comandos internos do shell, como 'exit' e 'cd'.
+// Retorna 1 se o comando for interno, 0 caso contrário.
 int executar_comando_embutido(char **args) {
     if (args[0] == NULL) {
-        return 1; // Linha vazia, não faz nada
+        return 1; // Ignora linha em branco.
     }
 
     if (strcmp(args[0], "exit") == 0) {
@@ -65,89 +67,78 @@ int executar_comando_embutido(char **args) {
         exit(0);
     }
     else if (strcmp(args[0], "cd") == 0) {
-        char *destino = args[1];
-        if (destino == NULL) {
-            destino = getenv("HOME");
-            if (destino == NULL) {
-                fprintf(stderr, "Variável HOME não definida\n");
-                return 1;
-            }
-        }
-
+        // Se 'cd' não tiver argumento, usa o diretório HOME.
+        char *destino = args[1] ? args[1] : getenv("HOME");
+        
         if (chdir(destino) != 0) {
             perror("Erro ao mudar de diretório");
         } else {
             char cwd[1024];
             if (getcwd(cwd, sizeof(cwd)) != NULL) {
                 printf("Diretório atual: %s\n", cwd);
-            } else {
-                perror("Erro ao obter diretório atual");
             }
         }
         return 1;
     }
 
-    return 0;
+    return 0; // Não é um comando embutido.
 }
 
 int main() {
-    // ALTERAÇÃO: Variáveis agora são ponteiros para alocação dinâmica.
     char *linha = NULL;
     char **args = NULL;
     size_t len = 0;
-    ssize_t lido;
 
     exibir_banner();
 
+    // Loop principal do shell.
     while (1) {
         printf("Meu Super Shell :D : ");
 
-        // ALTERAÇÃO: Leitura do comando com getline(), que aloca memória sozinho.
-        lido = getline(&linha, &len, stdin);
-        if (lido == -1) {
-            break; // Sai do loop se ocorrer erro ou Ctrl+D
+        // Lê a linha de comando com getline(), que gerencia a alocação de memória.
+        if (getline(&linha, &len, stdin) == -1) {
+            break; // Sai com Ctrl+D ou em caso de erro.
         }
 
-        // ALTERAÇÃO: Alocação inicial para a lista de argumentos.
+        // Aloca espaço inicial para os argumentos.
         int capacidade = 10;
         args = malloc(capacidade * sizeof(char*));
-        if (args == NULL) {
-            perror("Erro de alocação de memória");
+        if (!args) {
+            perror("Erro de alocação");
             exit(EXIT_FAILURE);
         }
 
-        // Parsing do comando em tokens
+        // Divide a linha de comando em tokens (argumentos) usando strtok.
         int i = 0;
         char *token = strtok(linha, " \t\r\n\a");
         while (token != NULL) {
-            args[i] = token;
-            i++;
+            args[i++] = token;
 
-            // ALTERAÇÃO: Dobra o tamanho da lista se ela encher.
+            // Se o espaço para argumentos acabar, dobra a capacidade.
             if (i >= capacidade) {
                 capacidade *= 2;
                 args = realloc(args, capacidade * sizeof(char*));
-                if (args == NULL) {
-                    perror("Erro de realocação de memória");
+                if (!args) {
+                    perror("Erro de realocação");
                     exit(EXIT_FAILURE);
                 }
             }
             token = strtok(NULL, " \t\r\n\a");
         }
-        args[i] = NULL;
+        args[i] = NULL; // Termina a lista de argumentos com NULL para o execvp.
 
-        // Executa comando embutido (cd, exit) ou comando externo
+        // Se o comando não for embutido, executa como um comando externo.
         if (args[0] != NULL) {
             if (!executar_comando_embutido(args)) {
                 executar_comando_externo(args);
             }
         }
         
-        // ALTERAÇÃO: Libera a memória da lista de argumentos a cada loop.
+        // Libera a memória alocada para os argumentos a cada loop.
         free(args);
     }
 
-    // ALTERAÇÃO: Libera a memória da linha lida antes de sair.
+    // Libera a memória da linha lida antes de encerrar.
     free(linha);
     printf("\n");
     return 0;
