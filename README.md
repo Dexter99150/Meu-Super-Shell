@@ -128,7 +128,7 @@ tchauzinho :D
 </a>
 </td>
 <td valign="middle">
-<b>Matheus Figueira Merlos</b><br>
+<b>Matheus Figueira Merlos</b><br> 
 <small>RA: 05222-016</small>
 </td>
 </tr>
