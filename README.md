@@ -7,29 +7,42 @@ Ele foi projetado para ser **leve** e **didático**, ilustrando os mecanismos fu
 
 ## ✨ Funcionalidades
 
-- **Execução de Comandos Externos:**  
-  Roda qualquer comando disponível no `PATH` do sistema (como `ls`, `pwd`, `echo`, `git`, etc.), incluindo seus argumentos.
-- **Comandos Embutidos (Built-in):**  
-  Executados diretamente pelo shell, sem criar novos processos:
+O MyShell agora está completo, implementando todas as funcionalidades essenciais e avançadas:
 
+- **Execução de Comandos Externos:** Roda qualquer comando disponível no `PATH` do sistema (como `ls`, `pwd`, `echo`, `git`, etc.), incluindo seus argumentos.
+
+- **Comandos Embutidos (Built-in):** Executados diretamente pelo shell, sem criar novos processos:
   - `cd [diretório]` → muda o diretório atual (ou vai para `HOME` se nenhum for especificado).
   - `exit` → encerra o shell.
 
-- **Loop Interativo:**  
-  Mantém o shell rodando até o usuário digitar `exit`.
+- **Loop Interativo:** Mantém o shell rodando até o usuário digitar `exit`.
 
-- **Parsing de Comandos:**  
-  Divide a entrada do usuário em tokens (comando e argumentos) para execução correta.
+- **Parsing de Comandos:** Divide a entrada do usuário em tokens, usando alocação dinâmica (`getline`, `realloc`) para suportar comandos de qualquer tamanho e removendo aspas (`"`).
+
+---
+
+### 🚀 Funcionalidades Avançadas (Módulo 2)
+
+| Funcionalidade | Sintaxe | Descrição |
+| :--- | :--- | :--- |
+| **Redirecionamento de Saída** | `comando > arquivo` | Sobrescreve o conteúdo do arquivo com a saída padrão (`stdout`). |
+| **Append de Saída** | `comando >> arquivo` | Anexa a saída padrão ao final do arquivo, sem apagar o conteúdo existente. |
+| **Redirecionamento de Entrada** | `comando < arquivo` | Redireciona a entrada padrão (`stdin`) a partir de um arquivo. |
+| **Pipes ( )** | `cmd1 | cmd2` | Encadeia comandos; a saída do primeiro processo (`cmd1`) serve como entrada para o segundo (`cmd2`), utilizando a chamada de sistema `pipe()`. |
+| **Execução em Background** | `comando &` | O shell detecta o caractere e retorna imediatamente ao prompt, permitindo que o comando execute em segundo plano sem a espera do pai. |
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
-|                                                     Ícones                                                      | Ferramentas e APIs                                                                                                                                                                              |
-| :-------------------------------------------------------------------------------------------------------------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| <a href="https://skillicons.dev"><img src="https://skillicons.dev/icons?i=c,linux,git,github&theme=dark" /></a> | **Compilador:** GCC (ou qualquer compilador C padrão) <br><br> **APIs POSIX e da biblioteca padrão do C:** <br> • `fork()` <br> • `execvp()` <br> • `wait()` <br> • `chdir()` <br> • `strtok()` |
+O projeto é escrito em **Linguagem C** e utiliza chamadas de sistema POSIX:
+
+- **Processos e Controle:** `fork()`, `execvp()`, `wait()`, `waitpid()`.
+- **E/S e Arquivos:** `open()`, `dup2()`, `pipe()`, `close()`.
+- **Gestão de Memória:** `getline()`, `malloc()`, `realloc()`, `free()`, `strtok()`.
 
 ---
+
 
 ## 🚀 Como Compilar e Executar
 
@@ -60,26 +73,28 @@ Você precisará de um compilador C (como o **GCC**) e um ambiente Unix (Linux o
 
 ## 📝 Exemplos de Uso
 
+## 📝 Exemplos de Uso
+
 ```bash
 # Inicia o shell
-./meu_shell
+./MyShell
 
-# Executa comandos
-Meu Super Shell :D: ls -l
-total 8
--rwxr-xr-x 1 user user 8424 Sep 15 12:00 meu_shell
--rw-r--r-- 1 user user  857 Sep 15 11:58 meu_shell.c
+# Executa comandos com background e pipe
+Meu Super Shell :D : sleep 3 &
+Processo [PID] iniciado em background.
+Meu Super Shell :D : ls -l | grep .c
+-rw-r--r-- 1 user user 10720 Nov  8 16:02 meu_shell.c
 
-Meu Super Shell :D: pwd
-/home/user/meu_projeto_shell
+# Executa comandos com redirecionamento (sobrescrever e append)
+Meu Super Shell :D : echo "Linha A" > log.txt
+Meu Super Shell :D : echo "Linha B" >> log.txt
 
-Meu Super Shell :D: cd /tmp
-Diretório atual: /tmp
+# Verifica o resultado
+Meu Super Shell :D : cat log.txt
+Linha A
+Linha B
 
-Meu Super Shell :D: echo "Olá, mundo!"
-Olá, mundo!
-
-Meu Super Shell :D: exit
+Meu Super Shell :D : exit
 tchauzinho :D
 ```
 
