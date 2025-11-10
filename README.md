@@ -71,7 +71,6 @@ Você precisará de um compilador C (como o **GCC**) e um ambiente Unix (Linux o
 
 ---
 
-## 📝 Exemplos de Uso
 
 ## 📝 Exemplos de Uso
 
@@ -152,4 +151,4 @@ tchauzinho :D
 </tr>
 </table>
 
-📅 **Setembro de 2025**
+📅 **Novembro de 2025**
